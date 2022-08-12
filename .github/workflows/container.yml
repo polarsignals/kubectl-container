@@ -1,0 +1,28 @@
+name: Container
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  build-and-push:
+    name: Build and push container
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Login to container registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u polarsignals --password-stdin ghcr.io
+
+      - name: Build and push
+        run: |
+          docker buildx create --use
+          docker buildx build --build-arg VERSION=v1.24.0 --platform linux/amd64,linux/arm64 -t ghcr.io/polarsignals/kubectl:v1.24.0 --push .
